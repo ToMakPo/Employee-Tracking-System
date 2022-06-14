@@ -1,0 +1,57 @@
+
+            <!-- <% const schedueldDates = Object.keys(scheduled.shifts) %>
+            <thead>
+                <tr>
+                    <th>
+                        Sunday <br>
+                        <%= schedueldDates[0] %>
+                    </th>
+                    <th>
+                        Monday <br>
+                        <%= schedueldDates[1] %>
+                    </th>
+                    <th>
+                        Tuesday <br>
+                        <%= schedueldDates[2] %>
+                    </th>
+                    <th>
+                        Wednesday <br>
+                        <%= schedueldDates[3] %>
+                    </th>
+                    <th>
+                        Thursday <br>
+                        <%= schedueldDates[4] %>
+                    </th>
+                    <th>
+                        Friday <br>
+                        <%= schedueldDates[5] %>
+                    </th>
+                    <th>
+                        Saterday <br>
+                        <%= schedueldDates[6] %>
+                    </th>
+                    <th>Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <% for (let shift of Object.values(scheduled.shifts)) { %>
+                        <td>
+                            <% if (shift.display.length > 0) { %>
+                                <%= shift.display[0] %>
+                                
+                                <% for (let i = 1; i < shift.display.length; i++) { %>
+                                    <br>
+                                    <%= shift.display[i] %>
+                                <% } %>
+                            <% } else { %>
+                                
+                            <% } %>
+                        </td>
+                    <% } %>
+
+                    <td>
+                        <%= scheduled.hours %>
+                    </td>
+                </tr>
+            </tbody> -->

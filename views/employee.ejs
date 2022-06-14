@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= name %></title>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="./style.css">
+
+    <!-- SCRIPTS -->
+    <script defer src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.0/moment.min.js" integrity="sha512-Izh34nqeeR7/nwthfeE0SI3c8uhFSnqxV0sI9TvTcXiFJkMd6fB644O64BRq2P/LA/+7eRvCw4GmLsXksyTHBg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script defer src="./script.js"></script>
+</head>
+<body>
+    <header><h1>Employee Tracking System</h1>
+        <a href="/">🏠</a>
+    </header>
+    <h2><%= name %></h2>
+    <div id="employeyInfo">
+        <div>
+            <strong>Phone Number:</strong>
+            <span><%= phone %></span>
+        </div>
+        <div>
+            <strong>Role:</strong>
+            <span><%= role %></span>
+        </div>
+        <div>
+            <strong>Start Date:</strong>
+            <span><%= startDate %></span>
+        </div>
+        <div>
+            <strong>End Date:</strong>
+            <span><%= endDate %></span>
+        </div>
+        <div>
+            <strong>On Shift:</strong>
+            <span><%= onShift %></span>
+        </div>
+    </div>
+
+    <hr>
+
+    <section id="scheduledInfo" class="calendarInfo">
+        <h3>Schedule</h3>
+
+        <div class="weekSelector">
+            <button id="prevWeek" class="weekSelector">❮</button>
+            <span>
+                <%= scheduled.startOfWeek %> - <%= scheduled.endOfWeek %>
+            </span>
+            <button id="nextWeek" class="weekSelector">❯</button>
+        </div>
+
+        <table class="calendarTable">
+            <thead>
+                <tr>
+                    <th colspan="2">
+                        Date
+                    </th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (let [key, shift] of Object.entries(scheduled.shifts)) { %>
+                    <tr data-id="<%= shift.id %>" data-date="<%= shift.date %>">
+                        <th class="dowDisplay"><%= shift.dow %></th>
+                        <th class="dateDisplay"><%= shift.dateDisplay %></th>
+                        <td>
+                            <input class="calendarInput" data-state="start" type="time" value="<%= shift.start %>">
+                            <span class="calendarDisplay"><%= shift.start || '-' %></span>
+                        </td>
+                        <td>
+                            <input class="calendarInput" data-state="end" type="time" value="<%= shift.end %>">
+                            <span class="calendarDisplay"><%= shift.end || '-' %></span>
+                        </td>
+                        <td class="hoursColumn"><%= shift.hours || '-' %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="background-color: #888"></td>
+                    <td class="hoursColumn"><%= scheduled.hours %></td>
+                </tr>
+            </tfoot>
+        </table>
+    </section>
+
+    <hr>
+
+    <div id="workedInfo" class="calendarInfo">
+        <h3>Hours Worked</h3>
+
+        <div class="weekSelector">
+            <button id="prevWeek" class="weekSelector">❮</button>
+            <span>
+                <%= worked.startOfWeek %> - <%= worked.endOfWeek %>
+            </span>
+            <button id="nextWeek" class="weekSelector">❯</button>
+        </div>
+
+        <table id="scheduledTable">
+
+            <% const workedDates = Object.keys(worked.shifts) %>
+            <thead>
+                <tr>
+                    <th>
+                        Sunday <br>
+                        <%= workedDates[0] %>
+                    </th>
+                    <th>
+                        Monday <br>
+                        <%= workedDates[1] %>
+                    </th>
+                    <th>
+                        Tuesday <br>
+                        <%= workedDates[2] %>
+                    </th>
+                    <th>
+                        Wednesday <br>
+                        <%= workedDates[3] %>
+                    </th>
+                    <th>
+                        Thursday <br>
+                        <%= workedDates[4] %>
+                    </th>
+                    <th>
+                        Friday <br>
+                        <%= workedDates[5] %>
+                    </th>
+                    <th>
+                        Saterday <br>
+                        <%= workedDates[6] %>
+                    </th>
+                    <th>Hours</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr>
+                    <% for (let shift of Object.values(worked.shifts)) { %>
+                        <td>
+                            <% if (shift.display.length > 0) { %>
+                                <%= shift.display[0] %>
+                                
+                                <% for (let i = 1; i < shift.display.length; i++) { %>
+                                    <br>
+                                    <%= shift.display[0] %>
+                                <% } %>
+                            <% } else { %>
+                                
+                            <% } %>
+                        </td>
+                    <% } %>
+
+                    <td>
+                        <%= worked.hours %>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="editEmployeeModal" class="modal">
+        <form>
+            <h3>Edit Employee</h3>
+            <table>
+                <tr>
+                    <th>Name:</th>
+                    <td><input name="name" type="text" required></td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td><input name="phone" type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"></td>
+                </tr>
+                <tr>
+                    <th>Role:</th>
+                    <td><select name="role" required>
+                        <option value="front desk" selected default>Front Desk</option>
+                        <option value="manager">Manager</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <th>Start Date:</th>
+                    <td><input name="startDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>End Date:</th>
+                    <td><input name="endDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>Hourly Pay:</th>
+                    <td>
+                        <span class="currency"></span>
+                        <input name="hourlyPay" type="number" step="0.01" min="0.00" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" required>
+                    </td>
+                </tr>
+            </table>
+            <div class="buttonContainer"> 
+                <button name="save" type="submit">Save</button>
+                <button name="cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="editEmployeeModal" class="modal">
+        <form>
+            <h3>Edit Employee</h3>
+            <table>
+                <tr>
+                    <th>Name:</th>
+                    <td><input name="name" type="text" required></td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td><input name="phone" type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"></td>
+                </tr>
+                <tr>
+                    <th>Role:</th>
+                    <td><select name="role" required>
+                        <option value="front desk" selected default>Front Desk</option>
+                        <option value="manager">Manager</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <th>Start Date:</th>
+                    <td><input name="startDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>End Date:</th>
+                    <td><input name="endDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>Hourly Pay:</th>
+                    <td>
+                        <span class="currency"></span>
+                        <input name="hourlyPay" type="number" step="0.01" min="0.00" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" required>
+                    </td>
+                </tr>
+            </table>
+            <div class="buttonContainer"> 
+                <button name="save" type="submit">Save</button>
+                <button name="cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="editEmployeeModal" class="modal">
+        <form>
+            <h3>Edit Employee</h3>
+            <table>
+                <tr>
+                    <th>Name:</th>
+                    <td><input name="name" type="text" required></td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td><input name="phone" type="tel" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"></td>
+                </tr>
+                <tr>
+                    <th>Role:</th>
+                    <td><select name="role" required>
+                        <option value="front desk" selected default>Front Desk</option>
+                        <option value="manager">Manager</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <th>Start Date:</th>
+                    <td><input name="startDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>End Date:</th>
+                    <td><input name="endDate" type="date" required></td>
+                </tr>
+                <tr>
+                    <th>Hourly Pay:</th>
+                    <td>
+                        <span class="currency"></span>
+                        <input name="hourlyPay" type="number" step="0.01" min="0.00" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" required>
+                    </td>
+                </tr>
+            </table>
+            <div class="buttonContainer"> 
+                <button name="save" type="submit">Save</button>
+                <button name="cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

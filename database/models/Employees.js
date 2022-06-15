@@ -49,6 +49,10 @@ const EmployeeSchema = new mongoose.Schema(
                 type: String,
                 default: makeID()
             },
+            date: {
+                type: Date,
+                required: true
+            },
             weekOf: {
                 type: String,
                 required: true
@@ -73,17 +77,23 @@ const EmployeeSchema = new mongoose.Schema(
                 type: String,
                 default: makeID()
             },
+            date: {
+                type: Date,
+                required: true
+            },
             weekOf: {
                 type: String,
                 required: true
             },
             startDate: {
                 type: Date,
-                required: true
+                required: false,
+                default: null
             },
             endDate: {
                 type: Date,
-                required: true
+                required: false,
+                default: null
             }
         }]
     }

@@ -218,42 +218,32 @@ addEmployeeModal_saveButton.on('click', async event => {
 
 /// SCHEDULED INFO ///
 const calendarInputs = $('.calendarInput')
-const splitTime = time => time != '' ? time.split(':') : null
 
 const employeeId = location.href.split('/').pop()
 
 calendarInputs.each(function() {
-    const input = $(this)
-    const row = input.closest('tr')
-    const id = row.data('id')
-    const state = input.data('state')
+    const thisInput = $(this)
+    const row = thisInput.closest('tr')
+    const shiftId = row.data('id')
     const date = moment(row.data('date'))
+    const state = thisInput.data('state')
+    const otherInput = $(row.find(`[data-state=${state == 'start' ? 'end' : 'start'}]`)[0])
 
-    const value = splitTime(input.val().split(':'))
-    const other = splitTime(row.find(`[data-state=${state == 'start' ? 'end' : 'start'}]`)[0].value.split(':'))
+    const display = $(thisInput.siblings()[0])
 
-    const start = state == 'start' ? value : other
-    const end = state == 'end' ? value : other
+    thisInput.on('change', function() {
+        display.text(thisInput.val())
 
-    let startDate = start ? date.clone().add(start[0], 'hours').add(start[1], 'minutes') : null
-    let endDate = end ? date.clone().add(end[0], 'hours').add(end[1], 'minutes') : null
+        const dateValue = date.format()
+        const startTime = state == 'start' ? thisInput.val() : otherInput.val()
+        const endTime = state == 'end' ? thisInput.val() : otherInput.val()
 
-    if (startDate && endDate && startDate.isAfter(endDate)) {
-        endDate.add(1, 'day')
-    }
-
-    const display = $(input.siblings()[0])
-
-    input.on('change', function() {
-        console.log(this.value)
-        display.text(this.value)
-
-        if (id) {
-            $.post('/api/schedule/update', { employeeId, id, startDate, endDate })
-        } else {
-            $.post('/api/test', { employeeId, startDate, endDate })
-            // $.post('/api/schedule/insert', { employeeId, startDate, endDate })
-        }
+        const url = `/api/schedule/${shiftId ? 'update' : 'insert'}`
+        const package = { employeeId, shiftId, dateValue, startTime, endTime }
+        console.log({url, ...package})
+        $.post(url, package).then(data => {
+            console.log(data)
+        })
     })
 })
 

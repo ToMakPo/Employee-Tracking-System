@@ -7,7 +7,7 @@ const moment = require('moment');
 /// EXPRESS ///
 const app = express()
 app.use(express.static('public'))
-app.use(express.urlencoded())
+app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 app.set("view engine", "ejs");
 
@@ -32,10 +32,12 @@ app.get('/:id', async function (req, res) {
 async function buildEmployeeView(employeeId, scheduledDate, workedDate) {    
     const employee = await Employees.findById(employeeId)
     if (employee == null) return null
+
     const scheduledShifts = {}
     const scheduledStartOfWeek = scheduledDate.clone().startOf('week')
     const scheduledWeekOf = getWeekOf(scheduledDate)
     let scheduledHours = 0
+
     for (let d = 0; d < 7; d++) {
         const date = scheduledStartOfWeek.clone().add(d, 'days')
         scheduledShifts[date.format('MMM-DD')] = {
@@ -48,14 +50,15 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             hours: 0
         }
     }
+
     for (let shift of employee.scheduledShifts) {
         if (shift.weekOf == scheduledWeekOf) {
             const date = moment(shift.date).format('MMM-DD')
             const startDate = shift.startDate ? moment(shift.startDate) : null
             const endDate = shift.endDate ? moment(shift.endDate) : null
-            const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours') : 0
+            const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
             
-            scheduledShifts[date].id = shift.id
+            scheduledShifts[date].id = shift._id
             scheduledShifts[date].start = startDate ? startDate.format('HH:mm') : ''
             scheduledShifts[date].end = endDate ? endDate.format('HH:mm') : ''
             scheduledShifts[date].hours = hours
@@ -67,20 +70,31 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
     const workedStartOfWeek = workedDate.clone().startOf('week')
     const workedWeekOf = getWeekOf(workedDate)
     let workedHours = 0
+
     for (let d = 0; d < 7; d++) {
         const date = workedStartOfWeek.clone().add(d, 'days')
         workedShifts[date.format('MMM-DD')] = {
-            display: []
+            id: '',
+            date: date.format('YYYY-MM-DD'),
+            dateDisplay: date.format('MMM D'),
+            dow: date.format('dddd'),
+            start: '',
+            end: '',
+            hours: 0
         }
     }
+
     for (let shift of employee.workedShifts) {
         if (shift.weekOf == workedWeekOf) {
-            const startDate = moment(shift.startDate)
-            const endDate = moment(shift.endDate)
-            const hours = endDate.diff(startDate, 'hours')
-            const date = startDate.format('MMM-DD')
+            const date = moment(shift.date).format('MMM-DD')
+            const startDate = shift.clockedIn ? moment(shift.clockedIn) : null
+            const endDate = shift.clockedOut ? moment(shift.clockedOut) : null
+            const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
             
-            workedShifts[date].display.push(startDate.format('HH:mm') + '-' + endDate.format('HH:mm'))
+            workedShifts[date].id = shift._id
+            workedShifts[date].start = startDate ? startDate.format('HH:mm') : ''
+            workedShifts[date].end = endDate ? endDate.format('HH:mm') : ''
+            workedShifts[date].hours = hours
             workedHours += hours
         }
     }
@@ -219,7 +233,7 @@ app.post('/api/employees/update', async function(req, res) {
 })
 
 const splitTime = time => time != '' ? time.split(':') : null
-app.post('/api/schedule/insert', async function(req, res) {
+app.post('/api/scheduled/insert', async function(req, res) {
     const employeeId = req.body.employeeId
     const date = moment(req.body.dateValue)
     const weekOf = getWeekOf(date)
@@ -234,22 +248,23 @@ app.post('/api/schedule/insert', async function(req, res) {
         endDate.add(1, 'day')
     }
 
-    const schedule = { date, weekOf, startDate, endDate }
-
     const employee = await Employees.findById(employeeId)
-    employee.scheduledShifts.push(schedule)
-    const data = employee.save()
-    
+    await employee.scheduledShifts.push({ date, weekOf, startDate, endDate })
+    await employee.save()
+    const shiftId = await employee.scheduledShifts.slice(-1)[0]._id
+
     res.json({
         action: 'insert',
+        section: 'scheduled',
         employee: employee,
+        shiftId,
         startTime: startDate ? startDate.format('HH:mm') : '',
         endTime: endDate ? endDate.format('HH:mm') : '',
-        hours: (startDate && endDate) ? endDate.diff(startDate, 'hours') : 0
+        hours: (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
     })
 })
 
-app.post('/api/schedule/update', async function(req, res) {
+app.post('/api/scheduled/update', async function(req, res) {
     const employeeId = req.body.employeeId
     const shiftId = req.body.shiftId
     const date = moment(req.body.dateValue)
@@ -264,28 +279,115 @@ app.post('/api/schedule/update', async function(req, res) {
         endDate.add(1, 'day')
     }
 
-    // const employee = await Employees.findById(employeeId)
-    // for (let shift in employee.scheduledShifts) {
-    //     if (shift.id == shiftId) {
-    //         shift.startDate = startDate
-    //         shift.endDate = endDate
-    //         break
-    //     }
-    // }
-    // employee.save()
-
-    data = await Employees.update({'scheduledShifts.id': shiftId}, {'$set': {
+    data = await Employees.updateOne({'scheduledShifts._id': shiftId}, {'$set': {
         'scheduledShifts.$.startDate': startDate,
         'scheduledShifts.$.endDate': endDate,
     }})
-
-    
     res.json({
         action: 'update',
+        section: 'scheduled',
         data: data,
         startTime: startDate ? startDate.format('HH:mm') : '',
         endTime: endDate ? endDate.format('HH:mm') : '',
-        hours: (startDate && endDate) ? endDate.diff(startDate, 'hours') : 0
+        hours: (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
+    })
+})
+
+
+app.post('/api/worked/insert', async function(req, res) {
+    const employeeId = req.body.employeeId
+    const date = moment(req.body.dateValue)
+    const weekOf = getWeekOf(date)
+
+    const startTime = splitTime(req.body.startTime)
+    const endTime = splitTime(req.body.endTime)
+
+    const clockedIn = startTime ? date.clone().add(startTime[0], 'hours').add(startTime[1], 'minutes') : null
+    const clockedOut = endTime ? date.clone().add(endTime[0], 'hours').add(endTime[1], 'minutes') : null
+
+    if (clockedIn && clockedOut && clockedIn.isAfter(clockedOut)) {
+        clockedOut.add(1, 'day')
+    }
+
+    const employee = await Employees.findById(employeeId)
+    const payRate = await employee.hourlyPay
+    await employee.workedShifts.push({ date, weekOf, clockedIn, clockedOut, payRate })
+    await employee.save()
+    const shiftId = await employee.workedShifts.slice(-1)[0]._id
+
+    res.json({
+        action: 'insert',
+        section: 'worked',
+        employee: employee,
+        shiftId,
+        clockedIn: clockedIn ? clockedIn.format('HH:mm') : '',
+        clockedOut: clockedOut ? clockedOut.format('HH:mm') : '',
+        hours: (clockedIn && clockedOut) ? clockedOut.diff(clockedIn, 'hours', true) : 0
+    })
+
+
+    // const employeeId = req.body.employeeId
+    // const date = moment(req.body.dateValue)
+    // const weekOf = getWeekOf(date)
+
+    // const startTime = splitTime(req.body.startTime)
+    // const endTime = splitTime(req.body.endTime)
+
+    // const clockedIn = startTime ? date.clone().add(startTime[0], 'hours').add(startTime[1], 'minutes') : null
+    // const clockedOut = endTime ? date.clone().add(endTime[0], 'hours').add(endTime[1], 'minutes') : null
+
+    // if (clockedIn && clockedOut && clockedIn.isAfter(clockedOut)) {
+    //     clockedOut.add(1, 'day')
+    // }
+
+    // const employee = await Employees.findById(employeeId)
+    // const payRate = employee.hourlyPay
+
+    // const shift = { date, weekOf, clockedIn, clockedOut, payRate }
+    
+    // await employee.workedShifts.push(shift)
+    // await employee.save()
+    // const shiftId = await employee.workedShifts.slice(-1)[0]._id
+
+    // res.json({
+    //     action: 'insert',
+    //     section: 'worked',
+    //     employee: employee,
+    //     shiftId,
+    //     clockedIn: clockedIn ? clockedIn.format('HH:mm') : '',
+    //     clockedOut: clockedOut ? clockedOut.format('HH:mm') : '',
+    //     hours: (clockedIn && clockedOut) ? clockedOut.diff(clockedIn, 'hours', true) : 0
+    // })
+})
+
+app.post('/api/worked/update', async function(req, res) {
+    const employeeId = req.body.employeeId
+    const shiftId = req.body.shiftId
+    const date = moment(req.body.dateValue)
+
+    const startTime = splitTime(req.body.startTime)
+    const endTime = splitTime(req.body.endTime)
+
+    const clockedIn = startTime ? date.clone().add(startTime[0], 'hours').add(startTime[1], 'minutes') : null
+    const clockedOut = endTime ? date.clone().add(endTime[0], 'hours').add(endTime[1], 'minutes') : null
+    console.log(req.body)
+
+    if (clockedIn && clockedOut && clockedIn.isAfter(clockedOut)) {
+        clockedOut.add(1, 'day')
+    }
+
+    data = await Employees.updateOne({'workedShifts._id': shiftId}, {'$set': {
+        'workedShifts.$.clockedIn': clockedIn,
+        'workedShifts.$.clockedOut': clockedOut,
+    }})
+
+    res.json({
+        action: 'update',
+        section: 'worked',
+        data: data,
+        clockedIn: clockedIn ? clockedIn.format('HH:mm') : '',
+        clockedOut: clockedOut ? clockedOut.format('HH:mm') : '',
+        hours: (clockedIn && clockedOut) ? clockedOut.diff(clockedIn, 'hours', true) : 0
     })
 })
 

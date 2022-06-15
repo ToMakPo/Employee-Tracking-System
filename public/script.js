@@ -220,30 +220,58 @@ addEmployeeModal_saveButton.on('click', async event => {
 const calendarInputs = $('.calendarInput')
 
 const employeeId = location.href.split('/').pop()
+const hourDisplays = {
+    scheduled: $('#scheduledInfo .hoursColumn.display'),
+    worked: $('#workedInfo .hoursColumn.display')
+}
+const hourTotal = {
+    scheduled: $($('#scheduledInfo .hoursColumn.total')[0]),
+    worked: $($('#workedInfo .hoursColumn.total')[0])
+}
 
 calendarInputs.each(function() {
     const thisInput = $(this)
+    const section = thisInput.closest('section').attr('id').replace('Info', '')
     const row = thisInput.closest('tr')
-    const shiftId = row.data('id')
-    const date = moment(row.data('date'))
-    const state = thisInput.data('state')
+    const date = moment(row.attr('data-date'))
+    const state = thisInput.attr('data-state')
     const otherInput = $(row.find(`[data-state=${state == 'start' ? 'end' : 'start'}]`)[0])
+    const hourInput = $(row.find(`.hoursColumn`)[0])
 
     const display = $(thisInput.siblings()[0])
 
-    thisInput.on('change', function() {
-        display.text(thisInput.val())
+    thisInput.blur(async function() {
+        if (thisInput.val() == thisInput.attr('data-current')) return
+        thisInput.attr('data-current', thisInput.val())
+
+        display.text(thisInput.val() || '-')
 
         const dateValue = date.format()
         const startTime = state == 'start' ? thisInput.val() : otherInput.val()
         const endTime = state == 'end' ? thisInput.val() : otherInput.val()
 
-        const url = `/api/schedule/${shiftId ? 'update' : 'insert'}`
+        const shiftId = row.attr('data-id')
+        const url = `/api/${section}/${shiftId ? 'update' : 'insert'}`
         const package = { employeeId, shiftId, dateValue, startTime, endTime }
-        console.log({url, ...package})
-        $.post(url, package).then(data => {
-            console.log(data)
+        console.log({shiftId, url})
+        const data = await $.post(url, package)
+
+        console.log(data)
+        if (data.action == 'insert') {
+            row.attr('data-id', data.shiftId)
+        }
+
+        hourInput
+            .text(data.hours.toFixed(2))
+            .attr('data-count', data.hours)
+
+        let sum = 0
+
+        hourDisplays[section].each(function() {
+            sum += $(this).attr('data-count')
         })
+
+        hourTotal[section].text(parseFloat(sum).toFixed(2))
     })
 })
 

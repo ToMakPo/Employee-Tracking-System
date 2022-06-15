@@ -41,58 +41,106 @@
             <span><%= onShift %></span>
         </div>
     </div>
+    
+    <main>
+        <section id="scheduledInfo" class="calendarInfo">
+            <h3>Schedule</h3>
 
-    <hr>
+            <div class="weekSelector">
+                <button id="prevWeek" class="weekSelector">❮</button>
+                <span>
+                    <%= scheduled.startOfWeek %> - <%= scheduled.endOfWeek %>
+                </span>
+                <button id="nextWeek" class="weekSelector">❯</button>
+            </div>
 
-    <section id="scheduledInfo" class="calendarInfo">
-        <h3>Schedule</h3>
-
-        <div class="weekSelector">
-            <button id="prevWeek" class="weekSelector">❮</button>
-            <span>
-                <%= scheduled.startOfWeek %> - <%= scheduled.endOfWeek %>
-            </span>
-            <button id="nextWeek" class="weekSelector">❯</button>
-        </div>
-
-        <table class="calendarTable">
-            <thead>
-                <tr>
-                    <th colspan="2">
-                        Date
-                    </th>
-                    <th>Start</th>
-                    <th>End</th>
-                    <th>Hours</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% for (let [key, shift] of Object.entries(scheduled.shifts)) { %>
-                    <tr data-id="<%= shift.id %>" data-date="<%= shift.date %>">
-                        <th class="dowDisplay"><%= shift.dow %></th>
-                        <th class="dateDisplay"><%= shift.dateDisplay %></th>
-                        <td>
-                            <input class="calendarInput" data-state="start" type="time" value="<%= shift.start %>">
-                            <span class="calendarDisplay"><%= shift.start || '-' %></span>
-                        </td>
-                        <td>
-                            <input class="calendarInput" data-state="end" type="time" value="<%= shift.end %>">
-                            <span class="calendarDisplay"><%= shift.end || '-' %></span>
-                        </td>
-                        <td class="hoursColumn"><%= shift.hours || '-' %></td>
+            <table class="calendarTable">
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            Date
+                        </th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Hours</th>
                     </tr>
-                <% } %>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="4" style="background-color: #888"></td>
-                    <td class="hoursColumn"><%= scheduled.hours %></td>
-                </tr>
-            </tfoot>
-        </table>
-    </section>
+                </thead>
+                <tbody>
+                    <% for (let [key, shift] of Object.entries(scheduled.shifts)) { %>
+                        <tr data-id="<%= shift.id %>" data-date="<%= shift.date %>">
+                            <th class="dowDisplay"><%= shift.dow %></th>
+                            <th class="dateDisplay"><%= shift.dateDisplay %></th>
+                            <td>
+                                <input class="calendarInput" data-state="start" data-current="<%= shift.start %>" type="time" value="<%= shift.start %>">
+                                <span class="calendarDisplay"><%= shift.start || '-' %></span>
+                            </td>
+                            <td>
+                                <input class="calendarInput" data-state="end" data-current="<%= shift.end %>" type="time" value="<%= shift.end %>">
+                                <span class="calendarDisplay"><%= shift.end || '-' %></span>
+                            </td>
+                            <td class="hoursColumn display" data-count="<%= shift.hours %>"><%= shift.hours.toFixed(2) || '-' %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="background-color: #888"></td>
+                        <td class="hoursColumn total"><%= scheduled.hours.toFixed(2) %></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
 
-    <hr>
+        <!-- <hr> -->
+
+        <section id="workedInfo" class="calendarInfo">
+            <h3>Worked Hours</h3>
+
+            <div class="weekSelector">
+                <button id="prevWeek" class="weekSelector">❮</button>
+                <span>
+                    <%= worked.startOfWeek %> - <%= worked.endOfWeek %>
+                </span>
+                <button id="nextWeek" class="weekSelector">❯</button>
+            </div>
+
+            <table class="calendarTable">
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            Date
+                        </th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (let [key, shift] of Object.entries(worked.shifts)) { %>
+                        <tr data-id="<%= shift.id %>" data-date="<%= shift.date %>">
+                            <th class="dowDisplay"><%= shift.dow %></th>
+                            <th class="dateDisplay"><%= shift.dateDisplay %></th>
+                            <td>
+                                <input class="calendarInput" data-state="start" data-current="<%= shift.start %>" type="time" value="<%= shift.start %>">
+                                <span class="calendarDisplay"><%= shift.start || '-' %></span>
+                            </td>
+                            <td>
+                                <input class="calendarInput" data-state="end" data-current="<%= shift.end %>" type="time" value="<%= shift.end %>">
+                                <span class="calendarDisplay"><%= shift.end || '-' %></span>
+                            </td>
+                            <td class="hoursColumn display" data-count="<%= shift.hours %>"><%= shift.hours.toFixed(2) || '-' %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="background-color: #888"></td>
+                        <td class="hoursColumn total"><%= worked.hours.toFixed(2) %></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+</main>
 
     <div id="editEmployeeModal" class="modal">
         <form>

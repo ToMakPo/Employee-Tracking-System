@@ -18,21 +18,18 @@ const EmployeeSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            trim: true,
-            required: false
+            trim: true
         },
         role: {
             type: String,
-            enum: ROLES,
-            required: false
+            enum: ROLES
         },
         startDate: {
             type: Date,
             required: true
         },
         endDate: {
-            type: Date,
-            required: false
+            type: Date
         },
         hourlyPay: {
             type: Number,
@@ -40,18 +37,12 @@ const EmployeeSchema = new mongoose.Schema(
         },
         activeShift: {
             type: Date,
-            required: false,
             default: null,
             max: Date.now
         },
         workedShifts: [{
-            id: {
-                type: String,
-                default: makeID()
-            },
             date: {
-                type: Date,
-                required: true
+                type: Date
             },
             weekOf: {
                 type: String,
@@ -59,11 +50,11 @@ const EmployeeSchema = new mongoose.Schema(
             },
             clockedIn: {
                 type: Date,
-                required: true,
-                max: Date.now
+                max: Date.now,
+                default: null
             },
             clockedOut: {
-                type: Date,
+                type: Date, 
                 max: Date.now,
                 default: null
             },
@@ -73,10 +64,6 @@ const EmployeeSchema = new mongoose.Schema(
             }
         }],
         scheduledShifts: [{
-            id: {
-                type: String,
-                default: makeID()
-            },
             date: {
                 type: Date,
                 required: true
@@ -87,12 +74,10 @@ const EmployeeSchema = new mongoose.Schema(
             },
             startDate: {
                 type: Date,
-                required: false,
                 default: null
             },
             endDate: {
                 type: Date,
-                required: false,
                 default: null
             }
         }]

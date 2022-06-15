@@ -88,20 +88,20 @@ main {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    justify-content: stretch;
 }
 
-section {
+.calendarInfo {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     background-color: #eee;
     padding: 5px;
     border-radius: 3px;
     box-shadow: 2px 2px 2px black;
 }
 
-.calendarInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
 .calendarInfo h3 {
     text-align: center;
 }

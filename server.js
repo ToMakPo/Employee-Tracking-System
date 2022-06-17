@@ -16,12 +16,13 @@ app.get('/', function (req, res) {
     res.render('home')
 })
 
-app.get('/:id', async function (req, res) {
-    const id = req.params.id
-    const scheduleDate = moment()
-    const workedDate = moment()
+app.get('/:employeeId', async function (req, res) {
+    const employeeId = req.params.employeeId
 
-    const employeeView = await buildEmployeeView(id, scheduleDate, workedDate)
+    const scheduledDate = 'scheduledDate' in req.query ? moment(req.query.scheduledDate) : moment()
+    const workedDate = 'workedDate' in req.query ? moment(req.query.workedDate) : moment()
+
+    const employeeView = await buildEmployeeView(employeeId, scheduledDate, workedDate)
 
     if (employeeView) {
         res.render('employee', employeeView)
@@ -30,8 +31,9 @@ app.get('/:id', async function (req, res) {
     }
 })
 
-async function buildEmployeeView(employeeId, scheduledDate, workedDate) {    
+async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
     const employee = await Employees.findById(employeeId)
+    
     if (employee == null) return null
 
     const scheduledShifts = {}
@@ -71,6 +73,7 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
     const workedStartOfWeek = workedDate.clone().startOf('week')
     const workedWeekOf = getWeekOf(workedDate)
     let workedHours = 0
+    let totalPay = 0
 
     for (let d = 0; d < 7; d++) {
         const date = workedStartOfWeek.clone().add(d, 'days')
@@ -81,9 +84,13 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             dow: date.format('dddd'),
             start: '',
             end: '',
-            hours: 0
+            hours: 0,
+            payRate: 0
         }
     }
+
+    const OVERTIME = 40
+    const OT_RATE = 1.5
 
     for (let shift of employee.workedShifts) {
         if (shift.weekOf == workedWeekOf) {
@@ -91,11 +98,27 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             const startDate = shift.clockedIn ? moment(shift.clockedIn) : null
             const endDate = shift.clockedOut ? moment(shift.clockedOut) : null
             const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
+            const payRate = shift.payRate
             
             workedShifts[date].id = shift._id
             workedShifts[date].start = startDate ? startDate.format('HH:mm') : ''
             workedShifts[date].end = endDate ? endDate.format('HH:mm') : ''
             workedShifts[date].hours = hours
+            workedShifts[date].payRate = payRate
+
+            if (workedHours + hours < OVERTIME) {
+                totalPay += hours * payRate
+            } else
+            if (workedHours >= OVERTIME) {
+                totalPay += hours * payRate * OT_RATE
+            } else {
+                const rnh = OVERTIME - workedHours
+                const rot = (workedHours + hours) - OVERTIME
+                
+                totalPay += rnh * payRate
+                totalPay += rot * payRate * OT_RATE
+            }
+
             workedHours += hours
         }
     }
@@ -119,7 +142,9 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             startOfWeek: workedDate.startOf('week').format('MMM Do, YYYY'),
             endOfWeek: workedDate.endOf('week').format('MMM Do, YYYY'),
             shifts: workedShifts,
-            hours: workedHours
+            hours: workedHours,
+            totalPay,
+            hourlyPay: employee.hourlyPay
         }
     }
 }

@@ -216,7 +216,7 @@ addEmployeeModal_saveButton.on('click', async event => {
     buildEmployeeTable()
 })
 
-/// SCHEDULED INFO ///
+/// CALENDAR INFO ///
 const calendarInputs = $('.calendarInput')
 
 const employeeId = location.href.split('/').pop()
@@ -228,6 +228,16 @@ const hourTotal = {
     scheduled: $($('#scheduledInfo .hoursColumn.total')[0]),
     worked: $($('#workedInfo .hoursColumn.total')[0])
 }
+const selectedWeek = {
+    scheduled: $($('#scheduledInfo .hoursColumn.total')[0]),
+    worked: $($('#workedInfo .hoursColumn.total')[0])
+}
+const scheduledPrevWeek = $('#scheduledInfo .weekSelector .prevWeek')
+    .click(function(event) {
+        event.preventDefault()
+
+    })
+
 
 calendarInputs.each(function() {
     const thisInput = $(this)
@@ -253,10 +263,9 @@ calendarInputs.each(function() {
         const shiftId = row.attr('data-id')
         const url = `/api/${section}/${shiftId ? 'update' : 'insert'}`
         const package = { employeeId, shiftId, dateValue, startTime, endTime }
-        console.log({shiftId, url})
+        
         const data = await $.post(url, package)
-
-        console.log(data)
+        
         if (data.action == 'insert') {
             row.attr('data-id', data.shiftId)
         }
@@ -268,7 +277,7 @@ calendarInputs.each(function() {
         let sum = 0
 
         hourDisplays[section].each(function() {
-            sum += $(this).attr('data-count')
+            sum += $(this).attr('data-count') * 1
         })
 
         hourTotal[section].text(parseFloat(sum).toFixed(2))
@@ -278,17 +287,31 @@ calendarInputs.each(function() {
 /// MODALS ///
 // Add a close button to all modals.
 $('.modal').each(function() {
-    const button = $('<button class="modal_close_button">✕</button>')
+    const button = $('<button class="modalCloseButton">✕</button>')
     $($(this).children('form')[0]).append(button)
 })
 
-$('.modal [name=cancel], .modal_close_button').each(function() {
+$('.modal [name=cancel], .modalCloseButton').each(function() {
     const button = $(this)
     const modal = button.closest('.modal')
 
     button.on('click', event => {
         event.preventDefault()
         hideModal(modal)
+    })
+})
+
+$('.modal form button[name=delete]').each(function() {
+    const button = $(this)
+    const modal = button.closest('.modal')
+
+    button.on('click', async event => {
+        event.preventDefault()
+
+        const data = await $.post('/api/employees/delete/', {_id: selectedEmployee._id})
+
+        hideModal(modal)
+        buildEmployeeTable()
     })
 })
 

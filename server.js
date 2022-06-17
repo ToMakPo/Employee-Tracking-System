@@ -15,6 +15,7 @@ app.set("view engine", "ejs");
 app.get('/', function (req, res) {
     res.render('home')
 })
+
 app.get('/:id', async function (req, res) {
     const id = req.params.id
     const scheduleDate = moment()
@@ -107,12 +108,14 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
         endDate: employee.endDate ? moment(employee.endDate).format('YYYY-MM-DD') : '',
         onShift: employee.activeShift ? true : false,
         scheduled: {
+            date: scheduledDate.format('YYYY-MM-DD'),
             startOfWeek: scheduledDate.startOf('week').format('MMM Do, YYYY'),
             endOfWeek: scheduledDate.endOf('week').format('MMM Do, YYYY'),
             shifts: scheduledShifts,
             hours: scheduledHours
         },
         worked: {
+            date: workedDate.format('YYYY-MM-DD'),
             startOfWeek: workedDate.startOf('week').format('MMM Do, YYYY'),
             endOfWeek: workedDate.endOf('week').format('MMM Do, YYYY'),
             shifts: workedShifts,
@@ -230,6 +233,11 @@ app.post('/api/employees/update', async function(req, res) {
     if ('phone' in changes) changes = cleanPhoneNumber(changes.phone)
     const data = await Employees.findByIdAndUpdate({_id}, changes)
     res.send(data)
+})
+
+app.post('/api/employees/delete', async function(req, res) {
+    const newEmployee = await Employees.deleteOne(req.body)
+    res.send(newEmployee)
 })
 
 const splitTime = time => time != '' ? time.split(':') : null

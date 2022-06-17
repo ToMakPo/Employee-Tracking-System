@@ -43,15 +43,15 @@
     </div>
     
     <main>
-        <section id="scheduledInfo" class="calendarInfo">
+        <section id="scheduledInfo" class="calendarInfo" data-date="<%= scheduled.date %>">
             <h3>Schedule</h3>
 
             <div class="weekSelector">
-                <button id="prevWeek" class="weekSelector">❮</button>
+                <button class="prevWeek">❮</button>
                 <span>
                     <%= scheduled.startOfWeek %> - <%= scheduled.endOfWeek %>
                 </span>
-                <button id="nextWeek" class="weekSelector">❯</button>
+                <button class="nextWeek">❯</button>
             </div>
 
             <table class="calendarTable">
@@ -93,15 +93,15 @@
 
         <!-- <hr> -->
 
-        <section id="workedInfo" class="calendarInfo">
+        <section id="workedInfo" class="calendarInfo" data-date="<%= worked.date %>">
             <h3>Worked Hours</h3>
 
             <div class="weekSelector">
-                <button id="prevWeek" class="weekSelector">❮</button>
+                <button class="prevWeek">❮</button>
                 <span>
                     <%= worked.startOfWeek %> - <%= worked.endOfWeek %>
                 </span>
-                <button id="nextWeek" class="weekSelector">❯</button>
+                <button class="nextWeek">❯</button>
             </div>
 
             <table class="calendarTable">

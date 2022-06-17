@@ -259,7 +259,11 @@ main {
     background-color: var(--color-success);
 }
 
-.modal .modal_close_button {
+.modal form button[name=delete] {
+    background-color: #e37d7d;
+}
+
+.modal .modalCloseButton {
     padding: 0;
     margin: 0;
     position: absolute;
@@ -271,4 +275,8 @@ main {
     border: none;
     background-color: transparent;
     cursor: pointer;
+}
+
+.modal .flexSeparator {
+    flex: 1 1 auto;
 }

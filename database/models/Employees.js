@@ -161,8 +161,8 @@ EmployeeSchema.methods.getPayInfoForWeekOf = function(date) {
     const overtimeHours = { count: 0, pay: 0 }
 
     for (let shift of this.workedShifts) {
-        const clockedIn = moment(shift.clockIn)
-        const clockedOut = moment(shift.clockOut)
+        const clockedIn = moment.utc(shift.clockIn)
+        const clockedOut = moment.utc(shift.clockOut)
         const payRate = shift.payRate
 
         if (clockedIn.isBetween(weekStart, weekEnd, undefined, '[]')) {

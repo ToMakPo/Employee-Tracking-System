@@ -7,6 +7,8 @@ const pager = {
     page: 0
 }
 
+const emps = []
+
 async function buildEmployeeTable() {
     const employees = await $.get('/api/employees', {filters, sort, pager})
     
@@ -21,50 +23,48 @@ async function buildEmployeeTable() {
         tableHeader.append(columnName)
     })
     
-    employees
-        .forEach(employee => {
-            const row = $('<tr>')
+    employees.forEach(employee => {
+        const row = $('<tr>')
+            .click(event => {
+                event.preventDefault(),
+                
+                window.location.href = `/${employee._id}`
+            })
+        employeeTable.append(row)
+
+        const nameCol = $('<td>').text(employee.name)
+        row.append(nameCol)
+
+        const phoneCol = $('<td>').text(employee.phone)
+        row.append(phoneCol)
+
+        const roleCol = $('<td>').text(employee.role)
+        row.append(roleCol)
+
+        employee.startDate = moment.utc(employee.startDate)
+        const startCol = $('<td>').text(employee.startDate.format('YYYY/MM/DD'))
+        row.append(startCol)
+
+        employee.endDate = employee.endDate ? moment.utc(employee.endDate) : null
+        const endCol = $('<td>').text(employee.endDate ? employee.endDate.format('YYYY/MM/DD') : '')
+        row.append(endCol)
+
+        const onShiftCol = $('<td>').text(employee.activeShift ? '✓' : '')
+        row.append(onShiftCol)
+
+        const editCol = $('<td>').append(
+            $('<button>')
+                .addClass('edit_employee_button')
+                .text('✎')
                 .click(event => {
-                    event.preventDefault(),
-                    
-                    window.location.href = `/${employee._id}`
+                    event.preventDefault()
+                    event.stopPropagation() 
+
+                    showEditEmployeeModal(employee)
                 })
-            employeeTable.append(row)
-
-            const nameCol = $('<td>').text(employee.name)
-            row.append(nameCol)
-
-            const phoneCol = $('<td>').text(employee.phone)
-            row.append(phoneCol)
-
-            const roleCol = $('<td>').text(employee.role)
-            row.append(roleCol)
-
-            employee.startDate = moment(employee.startDate)
-            const startCol = $('<td>').text(employee.startDate.format('YYYY/MM/DD'))
-            row.append(startCol)
-
-            employee.endDate = employee.endDate ? moment(employee.endDate) : null
-            const endCol = $('<td>').text(employee.endDate ? employee.endDate.format('YYYY/MM/DD') : '')
-            row.append(endCol)
-
-            const onShiftCol = $('<td>').text(employee.activeShift ? '✓' : '')
-            row.append(onShiftCol)
-
-            const editCol = $('<td>').append(
-                $('<button>')
-                    .addClass('edit_employee_button')
-                    .text('✎')
-                    .click(event => {
-                        event.preventDefault()
-                        event.stopPropagation() 
-
-                        showEditEmployeeModal(employee)
-                    })
-            )
-            row.append(editCol)
-        }
-    )
+        )
+        row.append(editCol)
+    })
 }
 
 buildEmployeeTable()
@@ -78,6 +78,7 @@ const editEmployeeModal_startDateInput = $('#editEmployeeModal [name=startDate]'
 const editEmployeeModal_endDateInput = $('#editEmployeeModal [name=endDate]')
 const editEmployeeModal_hourlyPayInput = $('#editEmployeeModal [name=hourlyPay]')
 const editEmployeeModal_saveButton = $('#editEmployeeModal [name=save]')
+const editEmployeeModal_deleteutton = $('#editEmployeeModal [name=delete]')
 
 let selectedEmployee = null
 
@@ -85,8 +86,8 @@ function showEditEmployeeModal(employee) {
     editEmployeeModal_nameInput.val(employee.name).focus().select()
     editEmployeeModal_phoneInput.val(employee.phone)
     editEmployeeModal_roleInput.val(employee.role)
-    editEmployeeModal_startDateInput.val(moment(employee.startDate).format('YYYY-MM-DD'))
-    editEmployeeModal_endDateInput.val(employee.endDate ? moment(employee.endDate).format('YYYY-MM-DD') : null)
+    editEmployeeModal_startDateInput.val(moment.utc(employee.startDate).format('YYYY-MM-DD'))
+    editEmployeeModal_endDateInput.val(employee.endDate ? moment.utc(employee.endDate).format('YYYY-MM-DD') : null)
     editEmployeeModal_hourlyPayInput.val(employee.hourlyPay)
 
     showModal(editEmployeeModal)
@@ -95,18 +96,19 @@ function showEditEmployeeModal(employee) {
 
 function changesMade(newValues) {
     const changes = {}
+
     for (let key of Object.keys(newValues)) {
-        if (newValues[key] instanceof moment) {
-            const changeMade = newValues[key].isSame(selectedEmployee[key])
-            if (changeMade) {
-                changes[key] = newValues[key]
-            }
+        const oldValue = selectedEmployee[key] || null
+        const newValue = newValues[key] || null
+        let changeMade = null
+    
+        if (newValue instanceof moment || oldValue instanceof moment) {
+            changeMade = newValue == null || oldValue == null || !newValue.isSame(oldValue)
         } else {
-            const changeMade = newValues[key] != selectedEmployee[key]
-            if (changeMade) {
-                changes[key] = newValues[key]
-            }
+            changeMade = newValue != oldValue
         }
+        
+        if (changeMade) changes[key] = newValue
     }
     return changes
 }
@@ -118,9 +120,9 @@ editEmployeeModal_saveButton.click(async event => {
         name: editEmployeeModal_nameInput.val() || null,
         phone: editEmployeeModal_phoneInput.val() || null,
         role: editEmployeeModal_roleInput.val() || null,
-        startDate: moment(editEmployeeModal_startDateInput.val()) || null,
-        endDate: moment(editEmployeeModal_endDateInput.val()) || null,
-        hourlyPay: editEmployeeModal_hourlyPayInput.val() || null
+        startDate: editEmployeeModal_startDateInput.val() ? moment.utc(editEmployeeModal_startDateInput.val()) : null,
+        endDate: editEmployeeModal_endDateInput.val() ? moment.utc(editEmployeeModal_endDateInput.val()) : null,
+        hourlyPay: editEmployeeModal_hourlyPayInput.val() != '' ? Math.max(editEmployeeModal_hourlyPayInput.val() * 1, 0) : null
     }
 
     const changes = changesMade(newValues)
@@ -154,7 +156,8 @@ editEmployeeModal_saveButton.click(async event => {
         return
     }
 
-    const data = await $.post('/api/employees/update', {_id: selectedEmployee._id, changes})
+    const _id = selectedEmployee._id
+    const data = await $.post('/api/employees/update', {_id, ...changes})
     
     hideModal(editEmployeeModal)
     buildEmployeeTable()
@@ -171,7 +174,7 @@ const addEmployeeModal_startDateInput = $('#addEmployeeModal [name=startDate]')
 const addEmployeeModal_hourlyPayInput = $('#addEmployeeModal [name=hourlyPay]')
 const addEmployeeModal_saveButton = $('#addEmployeeModal [name=save]')
 
-addEmployeeButton.click(event => {
+addEmployeeButton.click(_ => {
     addEmployeeModal.addClass('show')
 })
 
@@ -233,7 +236,7 @@ calendarInputs.each(function() {
     const thisInput = $(this)
     const section = thisInput.closest('section').attr('id').replace('Info', '')
     const row = thisInput.closest('tr')
-    const date = moment(row.attr('data-date'))
+    const date = moment.utc(row.attr('data-date'))
     const state = thisInput.attr('data-state')
     const otherInput = $(row.find(`[data-state=${state == 'start' ? 'end' : 'start'}]`)[0])
     const hourInput = $(row.find(`.hoursColumn`)[0])
@@ -253,10 +256,9 @@ calendarInputs.each(function() {
         const shiftId = row.attr('data-id')
         const url = `/api/${section}/${shiftId ? 'update' : 'insert'}`
         const package = { employeeId, shiftId, dateValue, startTime, endTime }
-        console.log({shiftId, url})
+        
         const data = await $.post(url, package)
 
-        console.log(data)
         if (data.action == 'insert') {
             row.attr('data-id', data.shiftId)
         }
@@ -268,7 +270,7 @@ calendarInputs.each(function() {
         let sum = 0
 
         hourDisplays[section].each(function() {
-            sum += $(this).attr('data-count')
+            sum += $(this).attr('data-count') * 1
         })
 
         hourTotal[section].text(parseFloat(sum).toFixed(2))

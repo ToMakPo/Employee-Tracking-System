@@ -29,9 +29,9 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
 
     for (let shift of employee.scheduledShifts) {
         if (shift.weekOf == scheduledWeekOf) {
-            const date = moment(shift.date).format('MMM-DD')
-            const startDate = shift.startDate ? moment(shift.startDate) : null
-            const endDate = shift.endDate ? moment(shift.endDate) : null
+            const date = moment.utc(shift.date).format('MMM-DD')
+            const startDate = shift.startDate ? moment.utc(shift.startDate) : null
+            const endDate = shift.endDate ? moment.utc(shift.endDate) : null
             const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
             
             scheduledShifts[date].id = shift._id
@@ -62,9 +62,9 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
 
     for (let shift of employee.workedShifts) {
         if (shift.weekOf == workedWeekOf) {
-            const date = moment(shift.date).format('MMM-DD')
-            const startDate = shift.clockedIn ? moment(shift.clockedIn) : null
-            const endDate = shift.clockedOut ? moment(shift.clockedOut) : null
+            const date = moment.utc(shift.date).format('MMM-DD')
+            const startDate = shift.clockedIn ? moment.utc(shift.clockedIn) : null
+            const endDate = shift.clockedOut ? moment.utc(shift.clockedOut) : null
             const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
             
             workedShifts[date].id = shift._id
@@ -79,8 +79,8 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
         name: employee.name,
         phone: employee.phone ? employee.phone.match(/^(\d{3})(\d{3})(\d{4})$/).join('-').substring(11) : '___-___-____',
         role: employee.role,
-        startDate: employee.startDate ? moment(employee.startDate).format('YYYY-MM-DD') : '',
-        endDate: employee.endDate ? moment(employee.endDate).format('YYYY-MM-DD') : '',
+        startDate: employee.startDate ? moment.utc(employee.startDate).format('YYYY-MM-DD') : '',
+        endDate: employee.endDate ? moment.utc(employee.endDate).format('YYYY-MM-DD') : '',
         onShift: employee.activeShift ? true : false,
         scheduled: {
             startOfWeek: scheduledDate.startOf('week').format('MMM Do, YYYY'),
@@ -103,8 +103,8 @@ module.exports = function(app) {
     })
     app.get('/:id', async function (req, res) {
         const id = req.params.id
-        const scheduleDate = moment()
-        const workedDate = moment()
+        const scheduleDate = moment.utc()
+        const workedDate = moment.utc()
 
         const employeeView = await buildEmployeeView(id, scheduleDate, workedDate)
 

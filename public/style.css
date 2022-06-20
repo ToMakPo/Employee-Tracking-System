@@ -1,7 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400&display=swap');
 
 :root {
-    --color-success: #bada55 
+    --color-success: #bada55;
+    --color-accept: #bada55;
+    --color-reject: #e37d7d;
 }
 
 body {
@@ -65,7 +67,7 @@ header {
     padding: 0;
     font-weight: bolder;
     font-size: 1.25em;
-    background-color: var(--color-success);
+    background-color: var(--color-accept);
     cursor: pointer;
 }
 
@@ -256,7 +258,11 @@ main {
 }
 
 .modal form button[type=submit] {
-    background-color: var(--color-success);
+    background-color: var(--color-accept);
+}
+
+.modal form button[name=delete] {
+    background-color: var(--color-reject);
 }
 
 .modal .modal_close_button {

@@ -17,7 +17,7 @@ module.exports = function(app) {
     app.get('/api/employees', async function (req, res) {
         if ('id' in req.query) {
             const employees = await Employees.findById(req.query.id)
-            if (employee.phone) employee.phone = employee.phone.match(/^(\d{3})(\d{3})(\d{4})$/).shift().join('-')
+            if ('phone' in employee) employee.phone = employee.phone.match(/^(\d{3})(\d{3})(\d{4})$/).shift().join('-')
             res.json(employees)
             return
         }
@@ -91,13 +91,8 @@ module.exports = function(app) {
             }
         }
 
-        if (lookup) {
-            const employees = await Employees.find(lookup)
-            res.json(employees)
-            return
-        }
+        const employees = await Employees.find(lookup)
         
-        const employees = await Employees.find({}) 
         res.json(employees)
     })
 
@@ -108,14 +103,12 @@ module.exports = function(app) {
     })
 
     app.post('/api/employees/update', async function(req, res) {
-        console.log('req.body:', req.body)
-        // const {_id, ...changes} = req.body
+        const {_id, ...changes} = req.body
 
-        // if ('phone' in changes) changes.phone = cleanPhoneNumber(changes.phone)
+        if ('phone' in changes) changes.phone = cleanPhoneNumber(changes.phone)
 
-        // const data = await Employees.findByIdAndUpdate({_id}, changes)
-        // res.json(data)
-        res.json({})
+        const data = await Employees.findByIdAndUpdate({_id}, changes)
+        res.json(data)
     })
 
     app.post('/api/employees/delete', async function(req, res) {
@@ -125,7 +118,7 @@ module.exports = function(app) {
 
     app.post('/api/scheduled/insert', async function(req, res) {
         const employeeId = req.body.employeeId
-        const date = moment(req.body.dateValue)
+        const date = moment.utc(req.body.dateValue)
         const weekOf = getWeekOf(date)
 
         const startTime = splitTime(req.body.startTime)
@@ -158,7 +151,7 @@ module.exports = function(app) {
     app.post('/api/scheduled/update', async function(req, res) {
         const employeeId = req.body.employeeId
         const shiftId = req.body.shiftId
-        const date = moment(req.body.dateValue)
+        const date = moment.utc(req.body.dateValue)
 
         const startTime = splitTime(req.body.startTime)
         const endTime = splitTime(req.body.endTime)
@@ -186,7 +179,7 @@ module.exports = function(app) {
 
     app.post('/api/worked/insert', async function(req, res) {
         const employeeId = req.body.employeeId
-        const date = moment(req.body.dateValue)
+        const date = moment.utc(req.body.dateValue)
         const weekOf = getWeekOf(date)
 
         const startTime = splitTime(req.body.startTime)
@@ -221,7 +214,7 @@ module.exports = function(app) {
     app.post('/api/worked/update', async function(req, res) {
         const employeeId = req.body.employeeId
         const shiftId = req.body.shiftId
-        const date = moment(req.body.dateValue)
+        const date = moment.utc(req.body.dateValue)
 
         const startTime = splitTime(req.body.startTime)
         const endTime = splitTime(req.body.endTime)

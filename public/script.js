@@ -219,18 +219,40 @@ addEmployeeModal_saveButton.click(async event => {
     buildEmployeeTable()
 })
 
-/// SCHEDULED INFO ///
+/// CALENDAR INFO ///
 const calendarInputs = $('.calendarInput')
 
-const employeeId = location.href.split('/').pop()
+const employeeId = new URL(location.href).pathname.substring(1)
+
 const hourDisplays = {
     scheduled: $('#scheduledInfo .hoursColumn.display'),
     worked: $('#workedInfo .hoursColumn.display')
 }
 const hourTotal = {
-    scheduled: $($('#scheduledInfo .hoursColumn.total')[0]),
-    worked: $($('#workedInfo .hoursColumn.total')[0])
+    scheduled: $($('#scheduledInfo .hoursColumn.total.hours')[0]),
+    worked: $($('#workedInfo .hoursColumn.total.hours')[0])
 }
+const selectedWeek = {
+    scheduled: $($('#scheduledInfo .hoursColumn.total.hours')[0]),
+    worked: $($('#workedInfo .hoursColumn.total.hours')[0])
+}
+
+$('.weekSelector button')
+    .click(async function(event) {
+        event.preventDefault()
+        
+        const currentDate = moment($(this).closest('section').attr('data-date'))
+        const delta = $(this).hasClass('nextWeek') ? 1 : -1
+        const newDate = currentDate.add(delta, 'week')
+
+        const section = $(this).closest('section').attr('id').replace('Info', '')
+
+        const url = new URL(location.href)
+        url.searchParams.set(`${section}Date`, newDate.format('YYYY-MM-DD'))
+
+        location.href = url.toString()
+    })
+
 
 calendarInputs.each(function() {
     const thisInput = $(this)
@@ -254,11 +276,28 @@ calendarInputs.each(function() {
         const endTime = state == 'end' ? thisInput.val() : otherInput.val()
 
         const shiftId = row.attr('data-id')
-        const url = `/api/${section}/${shiftId ? 'update' : 'insert'}`
+        const action = shiftId ? 'update' : 'insert'
+        const url = `/api/${section}/${action}`
         const package = { employeeId, shiftId, dateValue, startTime, endTime }
+
+        if (section == 'worked') {
+            const payRateInput = row.find('.payRateInput')
+            const payRateDisplay = row.find('.payRateDisplay')
+
+            if (action == 'insert') {
+                let payRate = thisInput.closest('section').attr('data-hourlyPay') * 1
+                payRateInput
+                    .attr('data-current', payRate)
+                    .val(payRate.toFixed(2))
+                payRateDisplay
+                    .text(payRate.toFixed(2))
+            }
+
+            package.payRate = payRateInput.attr('data-current') * 1
+        }
         
         const data = await $.post(url, package)
-
+        
         if (data.action == 'insert') {
             row.attr('data-id', data.shiftId)
         }
@@ -280,17 +319,31 @@ calendarInputs.each(function() {
 /// MODALS ///
 // Add a close button to all modals.
 $('.modal').each(function() {
-    const button = $('<button class="modal_close_button">✕</button>')
+    const button = $('<button class="modalCloseButton">✕</button>')
     $($(this).children('form')[0]).append(button)
 })
 
-$('.modal [name=cancel], .modal_close_button').each(function() {
+$('.modal [name=cancel], .modalCloseButton').each(function() {
     const button = $(this)
     const modal = button.closest('.modal')
 
     button.click(event => {
         event.preventDefault()
         hideModal(modal)
+    })
+})
+
+$('.modal form button[name=delete]').each(function() {
+    const button = $(this)
+    const modal = button.closest('.modal')
+
+    button.on('click', async event => {
+        event.preventDefault()
+
+        const data = await $.post('/api/employees/delete/', {_id: selectedEmployee._id})
+
+        hideModal(modal)
+        buildEmployeeTable()
     })
 })
 

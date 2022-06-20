@@ -143,7 +143,6 @@ main {
 .calendarTable .dowDisplay {
     padding: 0 5px;
 }
-
 .calendarTable .hoursColumn {
     text-align: right;
     padding: 0 5px;
@@ -179,6 +178,52 @@ main {
 .calendarInput:focus + .calendarDisplay {
     display: none;
 }
+
+.payColumn {
+    text-align: right !important;
+    width: 100px;
+}
+tfoot .payColumn {
+    padding: 0 5px;
+}
+
+.payRateDisplay {
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end;
+    text-align: right;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    padding: 0 5px;
+}
+
+.payRateInput {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    text-align: right;
+
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    
+    -moz-appearance: textfield;
+}
+.payRateInput::-webkit-outer-spin-button,
+.payRateInput::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.payRateInput:focus {
+    opacity: 1;
+}
+.payRateInput:focus + .payRateDisplay {
+    display: none;
+}
+
+
 .calendarTable .hoursColumn.total {
     font-weight: bold;
 }
@@ -221,7 +266,7 @@ main {
     position: relative;
 }
 
-.modal form td .currency::before {
+td .currency::before {
     content: '$';
     position: absolute;
     top: 50%;
@@ -265,7 +310,11 @@ main {
     background-color: var(--color-reject);
 }
 
-.modal .modal_close_button {
+.modal form button[name=delete] {
+    background-color: #e37d7d;
+}
+
+.modal .modalCloseButton {
     padding: 0;
     margin: 0;
     position: absolute;

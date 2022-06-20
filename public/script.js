@@ -230,11 +230,14 @@ const hourDisplays = {
 }
 const hourTotal = {
     scheduled: $($('#scheduledInfo .hoursColumn.total.hours')[0]),
-    worked: $($('#workedInfo .hoursColumn.total.hours')[0])
+    worked: $($('#workedInfo .hoursColumn.total')[0])
 }
+const payDisplays = $('#workedInfo .payColumn.display')
+const payTotal = $($('#workedInfo .payColumn.total')[0])
+
 const selectedWeek = {
-    scheduled: $($('#scheduledInfo .hoursColumn.total.hours')[0]),
-    worked: $($('#workedInfo .hoursColumn.total.hours')[0])
+    scheduled: $($('#scheduledInfo .weekSelector')[0]).attr('data-startOfWeek'),
+    worked: $($('#workedInfo .weekSelector')[0]).attr('data-startOfWeek')
 }
 
 $('.weekSelector button')
@@ -279,22 +282,6 @@ calendarInputs.each(function() {
         const action = shiftId ? 'update' : 'insert'
         const url = `/api/${section}/${action}`
         const package = { employeeId, shiftId, dateValue, startTime, endTime }
-
-        if (section == 'worked') {
-            const payRateInput = row.find('.payRateInput')
-            const payRateDisplay = row.find('.payRateDisplay')
-
-            if (action == 'insert') {
-                let payRate = thisInput.closest('section').attr('data-hourlyPay') * 1
-                payRateInput
-                    .attr('data-current', payRate)
-                    .val(payRate.toFixed(2))
-                payRateDisplay
-                    .text(payRate.toFixed(2))
-            }
-
-            package.payRate = payRateInput.attr('data-current') * 1
-        }
         
         const data = await $.post(url, package)
         
@@ -302,17 +289,58 @@ calendarInputs.each(function() {
             row.attr('data-id', data.shiftId)
         }
 
+        // Display hours
         hourInput
             .text(data.hours.toFixed(2))
-            .attr('data-count', data.hours)
+            .attr('data-current', data.hours)
 
         let sum = 0
 
         hourDisplays[section].each(function() {
-            sum += $(this).attr('data-count') * 1
+            sum += $(this).attr('data-current') * 1
         })
 
         hourTotal[section].text(parseFloat(sum).toFixed(2))
+
+        // Display rate
+        if (section == 'worked') {
+            if (action == 'insert') {
+                let payRate = data.payRate
+                row.find('.payRateInput')
+                    .attr('data-current', payRate)
+                    .val(payRate.toFixed(2))
+                row.find('.payRateDisplay')
+                    .text(payRate.toFixed(2))
+            }
+
+            const OVERTIME = 40
+            const OT_RATE = 1.5
+
+            let totalPay = 0
+            let workedHours = 0
+            
+            $('#workedInfo tbody tr').each(function() {
+                const hours = $($(this).find('.hoursColumn')[0]).attr('data-current') * 1
+                const payRate = $($(this).find('.payRateInput')[0]).attr('data-current') * 1
+
+                if (workedHours + hours < OVERTIME) {
+                    totalPay += hours * payRate
+                } else 
+                if (workedHours > OVERTIME) {
+                    totalPay += hours * payRate * OT_RATE
+                } else {
+                    const rnh = OVERTIME - workedHours
+                    const rot = hours - rnh
+    
+                    totalPay += rnh * payRate
+                    totalPay += rot * payRate * OT_RATE
+                }
+
+                workedHours += hours
+            })
+
+            payTotal.text(totalPay.toFixed(2))
+        }
     })
 })
 

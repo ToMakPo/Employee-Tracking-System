@@ -45,6 +45,7 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
     const workedShifts = {}
     const workedStartOfWeek = workedDate.clone().startOf('week')
     const workedWeekOf = getWeekOf(workedDate)
+    let totalPay = 0
     let workedHours = 0
 
     for (let d = 0; d < 7; d++) {
@@ -56,9 +57,13 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             dow: date.format('dddd'),
             start: '',
             end: '',
+            payRate: null,
             hours: 0
         }
     }
+
+    const OVERTIME = 40
+    const OT_RATE = 1.5
 
     for (let shift of employee.workedShifts) {
         if (shift.weekOf == workedWeekOf) {
@@ -66,11 +71,27 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             const startDate = shift.clockedIn ? moment.utc(shift.clockedIn) : null
             const endDate = shift.clockedOut ? moment.utc(shift.clockedOut) : null
             const hours = (startDate && endDate) ? endDate.diff(startDate, 'hours', true) : 0
+            const payRate = shift.payRate
             
             workedShifts[date].id = shift._id
             workedShifts[date].start = startDate ? startDate.format('HH:mm') : ''
             workedShifts[date].end = endDate ? endDate.format('HH:mm') : ''
+            workedShifts[date].payRate = payRate
             workedShifts[date].hours = hours
+            
+            if (workedHours + hours < OVERTIME) {
+                totalPay += hours * payRate
+            } else 
+            if (workedHours > OVERTIME) {
+                totalPay += hours * payRate * OT_RATE
+            } else {
+                const rnh = OVERTIME - workedHours
+                const rot = hours - rnh
+
+                totalPay += rnh * payRate
+                totalPay += rot * payRate * OT_RATE
+            }
+
             workedHours += hours
         }
     }
@@ -92,6 +113,7 @@ async function buildEmployeeView(employeeId, scheduledDate, workedDate) {
             startOfWeek: workedDate.startOf('week').format('MMM Do, YYYY'),
             endOfWeek: workedDate.endOf('week').format('MMM Do, YYYY'),
             shifts: workedShifts,
+            totalPay,
             hours: workedHours
         }
     }

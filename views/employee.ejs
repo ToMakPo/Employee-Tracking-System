@@ -46,7 +46,7 @@
         <section id="scheduledInfo" class="calendarInfo" data-date="<%= scheduled.date %>">
             <h3>Schedule</h3>
 
-            <div class="weekSelector">
+            <div class="weekSelector" data-startOfWeek="<%= scheduled.startOfWeek %>">
                 <button class="prevWeek">❮</button>
                 <span>
                     <%= scheduled.startOfWeek %> - <%= scheduled.endOfWeek %>
@@ -76,7 +76,7 @@
                                 <input class="calendarInput" data-state="end" data-current="<%= shift.end %>" type="time" value="<%= shift.end %>">
                                 <span class="calendarDisplay"><%= shift.end || '-' %></span>
                             </td>
-                            <td class="hoursColumn display" data-count="<%= shift.hours %>"><%= shift.hours.toFixed(2) || '-' %></td>
+                            <td class="hoursColumn display" data-current="<%= shift.hours %>"><%= shift.hours.toFixed(2) || '-' %></td>
                         </tr>
                     <% } %>
                 </tbody>
@@ -89,12 +89,10 @@
             </table>
         </section>
 
-        <!-- <hr> -->
-
         <section id="workedInfo" class="calendarInfo" data-date="<%= worked.date %>" data-hourlyPay="<%= worked.hourlyPay %>">
             <h3>Worked Hours</h3>
 
-            <div class="weekSelector">
+            <div class="weekSelector" data-startOfWeek="<%= worked.startOfWeek %>">
                 <button class="prevWeek">❮</button>
                 <span>
                     <%= worked.startOfWeek %> - <%= worked.endOfWeek %>
@@ -125,12 +123,13 @@
                                 <input class="calendarInput" data-state="end" data-current="<%= shift.end %>" type="time" value="<%= shift.end %>">
                                 <span class="calendarDisplay"><%= shift.end || '-' %></span>
                             </td>
+                            
                             <td class="payColumn">
                                 <span class="currency"></span>
-                                <input class="payRateInput" data-current="<%= shift.payRate %>" type="number" value="<%= shift.payRate.toFixed(2) %>">
-                                <span class="payRateDisplay"><%= shift.hours.toFixed(2) || '-' %></span>
+                                <input class="payRateInput" data-current="<%= shift.payRate %>" type="number" value="<%= shift.payRate?.toFixed(2) || null %>">
+                                <span class="payRateDisplay"><%= shift.payRate?.toFixed(2) || '-' %></span>
                             </td>
-                            <td class="hoursColumn display" data-count="<%= shift.hours %>"><%= shift.hours.toFixed(2) || '-' %></td>
+                            <td class="hoursColumn display" data-current="<%= shift.hours %>"><%= shift.hours?.toFixed(2) || '-' %></td>
                         </tr>
                     <% } %>
                 </tbody>
@@ -139,9 +138,9 @@
                         <td colspan="4" style="background-color: #888"></td>
                         <td class='payColumn total'>
                             <span class="currency"></span>
-                            <%= worked.totalPay.toFixed(2) %>
+                            <%= worked.totalPay?.toFixed(2) || '-' %>
                         </td>
-                        <td class="hoursColumn total hours"><%= worked.hours.toFixed(2) %></td>
+                        <td class="hoursColumn total"><%= worked.hours?.toFixed(2) %></td>
                     </tr>
                 </tfoot>
             </table>

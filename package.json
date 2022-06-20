@@ -4,8 +4,7 @@
   "description": "Steve has a small business.  He hires part-time workers to cover the front desk.  He needs a system to keep track of his workers (current and past), the hours they are scheduled to work each week, the weekly paycheck / pay statement with taxes deducted that each employee is due.  He needs to ensure that no employee works more than 25 hours / week.  He needs an interface to enter employees and their schedule for a week.  He needs to generate their pay statements weekly also.  He’d also like to understand who is working the most and least hours along with how many sick days an employee has taken.",
   "main": "server.js",
   "scripts": {
-    "start": "if-env NODE_ENV=production && npm run start:prod || npm run start:dev",
-    "start:prod": "node server.js",
+    "start": "node server.js",
     "start:dev": "nodemon run server.js"
   },
   "repository": {

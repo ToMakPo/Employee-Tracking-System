@@ -24,7 +24,7 @@ async function buildEmployeeTable() {
     employees
         .forEach(employee => {
             const row = $('<tr>')
-                .on('click', event => {
+                .click(event => {
                     event.preventDefault(),
                     
                     window.location.href = `/${employee._id}`
@@ -55,7 +55,7 @@ async function buildEmployeeTable() {
                 $('<button>')
                     .addClass('edit_employee_button')
                     .text('✎')
-                    .on('click', event => {
+                    .click(event => {
                         event.preventDefault()
                         event.stopPropagation() 
 
@@ -111,7 +111,7 @@ function changesMade(newValues) {
     return changes
 }
 
-editEmployeeModal_saveButton.on('click', async event => {
+editEmployeeModal_saveButton.click(async event => {
     event.preventDefault()
 
     const newValues = {
@@ -171,11 +171,11 @@ const addEmployeeModal_startDateInput = $('#addEmployeeModal [name=startDate]')
 const addEmployeeModal_hourlyPayInput = $('#addEmployeeModal [name=hourlyPay]')
 const addEmployeeModal_saveButton = $('#addEmployeeModal [name=save]')
 
-addEmployeeButton.on('click', event => {
+addEmployeeButton.click(event => {
     addEmployeeModal.addClass('show')
 })
 
-addEmployeeModal_saveButton.on('click', async event => {
+addEmployeeModal_saveButton.click(async event => {
     event.preventDefault()
 
     newValues = {
@@ -286,7 +286,7 @@ $('.modal [name=cancel], .modal_close_button').each(function() {
     const button = $(this)
     const modal = button.closest('.modal')
 
-    button.on('click', event => {
+    button.click(event => {
         event.preventDefault()
         hideModal(modal)
     })

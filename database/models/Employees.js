@@ -42,7 +42,8 @@ const EmployeeSchema = new mongoose.Schema(
         },
         workedShifts: [{
             date: {
-                type: Date
+                type: Date,
+                required: true
             },
             weekOf: {
                 type: String,
@@ -50,12 +51,10 @@ const EmployeeSchema = new mongoose.Schema(
             },
             clockedIn: {
                 type: Date,
-                max: Date.now,
                 default: null
             },
             clockedOut: {
                 type: Date, 
-                max: Date.now,
                 default: null
             },
             payRate: {
@@ -98,10 +97,6 @@ EmployeeSchema.statics.add = function(name, phone, role, startDate, hourlyPay) {
     employee.save()
     return employee
 }
-
-// EmployeeSchema.static.findById = function(id) {
-//     return this.where({ : new RegExp(name, 'i') })
-// }
 
 /**
  * Find all employees where any part of their name matches the input.
